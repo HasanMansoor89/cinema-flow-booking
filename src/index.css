@@ -88,6 +88,6 @@
   }
 
   .screen {
-    @apply w-full h-6 bg-white/10 rounded-lg mb-8 transform perspective-1000 rotateX(45deg) shadow-lg;
+    @apply w-full h-6 bg-white/10 rounded-lg mb-8 transform perspective-1000 rotateX-45 shadow-lg;
   }
 }

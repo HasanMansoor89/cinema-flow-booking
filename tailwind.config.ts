@@ -82,6 +82,7 @@ export default {
 			},
 			transform: {
 				'perspective': 'perspective(var(--tw-perspective))',
+				'rotateX': 'rotateX(var(--tw-rotate-x))',
 			},
 			keyframes: {
 				'accordion-down': {
@@ -144,6 +145,24 @@ export default {
 			}, {})
 			
 			addUtilities(perspectiveUtilities)
+			
+			// Add rotateX utilities
+			const rotateXUtilities = {
+				'.rotateX-45': {
+					'--tw-rotate-x': '45deg',
+					'transform': transformPlugins['rotateX']
+				},
+				'.rotateX-90': {
+					'--tw-rotate-x': '90deg',
+					'transform': transformPlugins['rotateX']
+				},
+				'.rotateX-180': {
+					'--tw-rotate-x': '180deg',
+					'transform': transformPlugins['rotateX']
+				}
+			}
+			
+			addUtilities(rotateXUtilities)
 		}
 	],
 } satisfies Config;
