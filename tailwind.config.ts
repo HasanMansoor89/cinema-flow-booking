@@ -77,6 +77,12 @@ export default {
 				md: 'calc(var(--radius) - 2px)',
 				sm: 'calc(var(--radius) - 4px)'
 			},
+			perspective: {
+				'1000': '1000px'
+			},
+			transform: {
+				'perspective': 'perspective(var(--tw-perspective))',
+			},
 			keyframes: {
 				'accordion-down': {
 					from: {
@@ -123,5 +129,21 @@ export default {
 			}
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [
+		require("tailwindcss-animate"),
+		function({ addUtilities, theme }) {
+			const perspectives = theme('perspective', {})
+			const transformPlugins = theme('transform', {})
+			
+			const perspectiveUtilities = Object.entries(perspectives).reduce((acc, [key, value]) => {
+				acc[`.perspective-${key}`] = {
+					'--tw-perspective': value,
+					'transform': transformPlugins['perspective']
+				}
+				return acc
+			}, {})
+			
+			addUtilities(perspectiveUtilities)
+		}
+	],
 } satisfies Config;
