@@ -28,27 +28,21 @@ const Footer: React.FC = () => {
             </div>
           </div>
           
-        <div>
-          <h3 className="font-semibold text-lg mb-4">Help & Info</h3>
-          <ul className="space-y-2">
-            <li>
-              <Link to="/faq" className="text-gray-400 hover:text-cinema-primary transition-colors">FAQ</Link>
-            </li>
-            <li>
-              <Link to="/terms" className="text-gray-400 hover:text-cinema-primary transition-colors">Terms of Service</Link>
-            </li>
-            <li>
-              <Link to="/terms" className="text-gray-400 hover:text-cinema-primary transition-colors">Terms of Service</Link>
-            </li>
-            <li>
-              <Link to="/privacy" className="text-gray-400 hover:text-cinema-primary transition-colors">Privacy Policy</Link>
-            </li>
-            <li>
-              <Link to="/refund" className="text-gray-400 hover:text-cinema-primary transition-colors">Refund Policy</Link>
-            </li>
-          </ul>
-        </div>
-        
+          <div>
+            <h3 className="font-semibold text-lg mb-4">Help & Info</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link to="/faq" className="text-gray-400 hover:text-cinema-primary transition-colors">FAQ</Link>
+              </li>
+              <li>
+                <Link to="/terms" className="text-gray-400 hover:text-cinema-primary transition-colors">Terms of Service</Link>
+              </li>
+              <li>
+                <Link to="/privacy" className="text-gray-400 hover:text-cinema-primary transition-colors">Privacy Policy</Link>
+              </li>
+            </ul>
+          </div>
+          
           
           <div>
             <h3 className="font-semibold text-lg mb-4">Contact Us</h3>

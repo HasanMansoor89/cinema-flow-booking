@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,6 +13,7 @@ import ConfirmationPage from "./pages/ConfirmationPage";
 import AboutPage from "./pages/AboutPage";
 import NotFound from "./pages/NotFound";
 import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import FAQ from "./pages/FAQ";
 
 const queryClient = new QueryClient();
@@ -32,6 +34,7 @@ const App = () => (
               <Route path="/confirmation" element={<ConfirmationPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/faq" element={<FAQ />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
