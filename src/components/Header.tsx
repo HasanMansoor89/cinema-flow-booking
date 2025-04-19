@@ -1,8 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Search, Ticket, User } from 'lucide-react';
+import { Ticket } from 'lucide-react';
 
 const Header: React.FC = () => {
   return (
@@ -17,18 +16,6 @@ const Header: React.FC = () => {
           <Link to="/" className="text-white hover:text-cinema-primary transition-colors">Home</Link>
           <Link to="/movies" className="text-white hover:text-cinema-primary transition-colors">Movies</Link>
           <Link to="/about" className="text-white hover:text-cinema-primary transition-colors">About</Link>
-        </div>
-        
-        <div className="flex items-center space-x-3">
-          <Button variant="ghost" size="icon" className="text-white">
-            <Search className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="text-white">
-            <User className="h-5 w-5" />
-          </Button>
-          <Button className="bg-cinema-primary hover:bg-cinema-secondary text-white">
-            Sign In
-          </Button>
         </div>
       </div>
     </header>
