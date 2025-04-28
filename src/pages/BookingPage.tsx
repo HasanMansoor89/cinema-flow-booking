@@ -1,11 +1,13 @@
+
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { getShowtime, getSeats, getMovie } from '@/services/api';
 import { Showtime, Seat, Movie } from '@/types';
 import SeatGrid from '@/components/SeatGrid';
 import BookingForm from '@/components/BookingForm';
 import { format, parseISO } from 'date-fns';
-import { Ticket, Clock, Calendar } from 'lucide-react';
+import { Ticket, Clock, Calendar, AlertTriangle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const BookingPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,37 +16,56 @@ const BookingPage: React.FC = () => {
   const [movie, setMovie] = useState<Movie | null>(null);
   const [selectedSeats, setSelectedSeats] = useState<Seat[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchBookingData = async () => {
       try {
-        if (id) {
-          const showtimeId = parseInt(id);
-          const showtimeData = await getShowtime(showtimeId);
-          
-          if (showtimeData) {
-            setShowtime(showtimeData);
-            
-            // Fetch movie data
-            const movieData = await getMovie(showtimeData.movieId);
-            if (movieData) {
-              setMovie(movieData);
-            }
-            
-            // Fetch seats
-            const seatsData = await getSeats(showtimeId);
-            setSeats(seatsData);
-          }
+        if (!id || !/^\d+$/.test(id)) {
+          throw new Error('Invalid showtime ID');
         }
+
+        const showtimeId = parseInt(id);
+        const showtimeData = await getShowtime(showtimeId);
+        
+        if (!showtimeData) {
+          throw new Error('Showtime not found');
+        }
+        
+        setShowtime(showtimeData);
+        
+        // Fetch movie data
+        const movieData = await getMovie(showtimeData.movieId);
+        if (!movieData) {
+          throw new Error('Movie information not available');
+        }
+        setMovie(movieData);
+        
+        // Fetch seats
+        const seatsData = await getSeats(showtimeId);
+        if (!seatsData || seatsData.length === 0) {
+          throw new Error('No seats available for this showtime');
+        }
+        setSeats(seatsData);
       } catch (error) {
         console.error('Error fetching booking data:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Failed to load booking information';
+        setError(errorMessage);
+        
+        toast({
+          title: "Error loading booking page",
+          description: errorMessage,
+          variant: "destructive"
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchBookingData();
-  }, [id]);
+  }, [id, toast]);
 
   const handleSeatSelect = (seat: Seat) => {
     if (seat.status === 'booked') return;
@@ -70,10 +91,20 @@ const BookingPage: React.FC = () => {
     );
   }
 
-  if (!showtime || !movie) {
+  if (error || !showtime || !movie) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold">Showtime not found</h1>
+        <div className="bg-card p-8 rounded-lg text-center">
+          <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold mb-4">Unable to load booking information</h1>
+          <p className="text-white/70 mb-6">{error || 'Showtime or movie information not found'}</p>
+          <button 
+            onClick={() => navigate('/movies')} 
+            className="bg-cinema-primary hover:bg-cinema-secondary text-white px-6 py-2 rounded-md"
+          >
+            Browse Movies
+          </button>
+        </div>
       </div>
     );
   }

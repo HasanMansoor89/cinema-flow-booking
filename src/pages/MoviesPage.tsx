@@ -4,12 +4,33 @@ import { useQuery } from '@tanstack/react-query';
 import { getMovies } from '@/services/api';
 import MovieCard from '@/components/MovieCard';
 import { Film } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const MoviesPage = () => {
-  const { data: movies, isLoading } = useQuery({
+  const { toast } = useToast();
+  const { data: movies, isLoading, error } = useQuery({
     queryKey: ['movies'],
     queryFn: getMovies,
+    onError: (err) => {
+      toast({
+        title: "Error loading movies",
+        description: err instanceof Error ? err.message : "Something went wrong",
+        variant: "destructive"
+      });
+    }
   });
+
+  // Handle error state explicitly
+  if (error) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="bg-card p-6 rounded-lg text-center">
+          <h2 className="text-xl font-bold mb-4">Unable to load movies</h2>
+          <p className="text-white/70">Please try again later</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -26,9 +47,14 @@ const MoviesPage = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {movies?.map((movie) => (
+          {movies && movies.map((movie) => (
             <MovieCard key={movie.id} movie={movie} />
           ))}
+          {(!movies || movies.length === 0) && (
+            <div className="col-span-full text-center py-10">
+              <p className="text-lg text-white/70">No movies available at this time</p>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -7,20 +7,47 @@ import { Label } from '@/components/ui/label';
 import { createBooking } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { z } from 'zod';
 
 interface BookingFormProps {
   showtime: Showtime;
   selectedSeats: Seat[];
 }
 
+// Schema for form validation
+const bookingSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters").max(100),
+  email: z.string().email("Please enter a valid email address")
+});
+
 const BookingForm: React.FC<BookingFormProps> = ({ showtime, selectedSeats }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [errors, setErrors] = useState<{name?: string, email?: string}>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const totalPrice = selectedSeats.length * showtime.price;
+
+  const validateForm = () => {
+    try {
+      bookingSchema.parse({ name, email });
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const formattedErrors: {name?: string, email?: string} = {};
+        error.errors.forEach(err => {
+          if (err.path[0]) {
+            formattedErrors[err.path[0] as 'name' | 'email'] = err.message;
+          }
+        });
+        setErrors(formattedErrors);
+      }
+      return false;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,12 +61,21 @@ const BookingForm: React.FC<BookingFormProps> = ({ showtime, selectedSeats }) =>
       return;
     }
 
+    // Validate form before submission
+    if (!validateForm()) {
+      return;
+    }
+
+    // Sanitize inputs - convert to string and trim
+    const sanitizedName = String(name).trim();
+    const sanitizedEmail = String(email).trim();
+
     try {
       setIsSubmitting(true);
       
       const booking: Booking = {
-        customerName: name,
-        email,
+        customerName: sanitizedName,
+        email: sanitizedEmail,
         showtimeId: showtime.id,
         seatIds: selectedSeats.map(seat => seat.id),
         totalPrice
@@ -56,6 +92,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ showtime, selectedSeats }) =>
       navigate('/confirmation', { state: { booking: result } });
       
     } catch (error) {
+      console.error("Booking error:", error);
       toast({
         title: "Booking failed",
         description: error instanceof Error ? error.message : "An unexpected error occurred",
@@ -98,8 +135,13 @@ const BookingForm: React.FC<BookingFormProps> = ({ showtime, selectedSeats }) =>
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            className="bg-muted text-white"
+            aria-invalid={!!errors.name}
+            aria-describedby={errors.name ? "name-error" : undefined}
+            className={`bg-muted text-white ${errors.name ? 'border-red-500' : ''}`}
           />
+          {errors.name && (
+            <p id="name-error" className="text-sm text-red-500">{errors.name}</p>
+          )}
         </div>
         
         <div className="space-y-2">
@@ -110,8 +152,13 @@ const BookingForm: React.FC<BookingFormProps> = ({ showtime, selectedSeats }) =>
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="bg-muted text-white"
+            aria-invalid={!!errors.email}
+            aria-describedby={errors.email ? "email-error" : undefined}
+            className={`bg-muted text-white ${errors.email ? 'border-red-500' : ''}`}
           />
+          {errors.email && (
+            <p id="email-error" className="text-sm text-red-500">{errors.email}</p>
+          )}
         </div>
         
         <Button 

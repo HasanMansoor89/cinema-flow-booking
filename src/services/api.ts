@@ -131,85 +131,173 @@ const showtimes = generateShowtimes();
 const seats = generateSeats(showtimes);
 const bookings: Booking[] = [];
 
-// Mock API functions
+// Security related helpers
+const sanitizeId = (id: unknown): number => {
+  const parsedId = typeof id === 'string' ? parseInt(id, 10) : Number(id);
+  if (isNaN(parsedId) || parsedId <= 0) {
+    throw new Error('Invalid ID format');
+  }
+  return parsedId;
+};
+
+const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+// Mock API functions with improved security
 export const getMovies = async (): Promise<Movie[]> => {
-  return new Promise(resolve => {
-    setTimeout(() => resolve(movies), 500);
+  return new Promise((resolve, reject) => {
+    try {
+      setTimeout(() => resolve([...movies]), 500);
+    } catch (error) {
+      reject(new Error('Failed to fetch movies'));
+    }
   });
 };
 
 export const getMovie = async (id: number): Promise<Movie | undefined> => {
-  return new Promise(resolve => {
-    setTimeout(() => resolve(movies.find(movie => movie.id === id)), 500);
+  return new Promise((resolve, reject) => {
+    try {
+      const movieId = sanitizeId(id);
+      setTimeout(() => {
+        const movie = movies.find(movie => movie.id === movieId);
+        if (!movie) {
+          return resolve(undefined);
+        }
+        resolve({...movie}); // Return a copy to prevent mutation
+      }, 500);
+    } catch (error) {
+      reject(new Error('Failed to fetch movie details'));
+    }
   });
 };
 
 export const getShowtimes = async (movieId?: number): Promise<Showtime[]> => {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      if (movieId) {
-        return resolve(showtimes.filter(showtime => showtime.movieId === movieId));
-      }
-      return resolve(showtimes);
-    }, 500);
+  return new Promise((resolve, reject) => {
+    try {
+      setTimeout(() => {
+        if (movieId) {
+          const id = sanitizeId(movieId);
+          return resolve([...showtimes.filter(showtime => showtime.movieId === id)]);
+        }
+        return resolve([...showtimes]);
+      }, 500);
+    } catch (error) {
+      reject(new Error('Failed to fetch showtimes'));
+    }
   });
 };
 
 export const getShowtime = async (id: number): Promise<Showtime | undefined> => {
-  return new Promise(resolve => {
-    setTimeout(() => resolve(showtimes.find(showtime => showtime.id === id)), 500);
+  return new Promise((resolve, reject) => {
+    try {
+      const showtimeId = sanitizeId(id);
+      setTimeout(() => {
+        const showtime = showtimes.find(showtime => showtime.id === showtimeId);
+        resolve(showtime ? {...showtime} : undefined);
+      }, 500);
+    } catch (error) {
+      reject(new Error('Failed to fetch showtime details'));
+    }
   });
 };
 
 export const getSeats = async (showtimeId: number): Promise<Seat[]> => {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve(seats.filter(seat => seat.showtimeId === showtimeId));
-    }, 500);
+  return new Promise((resolve, reject) => {
+    try {
+      const id = sanitizeId(showtimeId);
+      setTimeout(() => {
+        resolve([...seats.filter(seat => seat.showtimeId === id)]);
+      }, 500);
+    } catch (error) {
+      reject(new Error('Failed to fetch seats'));
+    }
   });
 };
 
 export const updateSeatStatus = async (seatId: number, status: 'available' | 'booked' | 'selected'): Promise<Seat | undefined> => {
-  return new Promise(resolve => {
-    setTimeout(() => {
-      const seatIndex = seats.findIndex(seat => seat.id === seatId);
-      if (seatIndex !== -1) {
-        seats[seatIndex].status = status;
-        return resolve(seats[seatIndex]);
+  return new Promise((resolve, reject) => {
+    try {
+      const id = sanitizeId(seatId);
+      if (!['available', 'booked', 'selected'].includes(status)) {
+        throw new Error('Invalid seat status');
       }
-      return resolve(undefined);
-    }, 300);
+      
+      setTimeout(() => {
+        const seatIndex = seats.findIndex(seat => seat.id === id);
+        if (seatIndex === -1) {
+          return resolve(undefined);
+        }
+        
+        seats[seatIndex] = {
+          ...seats[seatIndex],
+          status
+        };
+        
+        return resolve({...seats[seatIndex]});
+      }, 300);
+    } catch (error) {
+      reject(new Error('Failed to update seat status'));
+    }
   });
 };
 
 export const createBooking = async (booking: Booking): Promise<Booking> => {
   return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      // Check if all seats are available
-      const selectedSeats = seats.filter(seat => booking.seatIds.includes(seat.id));
-      const unavailableSeats = selectedSeats.filter(seat => seat.status === 'booked');
-      
-      if (unavailableSeats.length > 0) {
-        return reject(new Error('Some selected seats are already booked'));
+    try {
+      // Validate booking data
+      if (!booking.customerName || booking.customerName.trim().length < 2) {
+        return reject(new Error('Invalid customer name'));
       }
       
-      // Update seat status
-      selectedSeats.forEach(seat => {
-        const seatIndex = seats.findIndex(s => s.id === seat.id);
-        if (seatIndex !== -1) {
-          seats[seatIndex].status = 'booked';
+      if (!booking.email || !validateEmail(booking.email)) {
+        return reject(new Error('Invalid email address'));
+      }
+      
+      if (!booking.seatIds || booking.seatIds.length === 0) {
+        return reject(new Error('No seats selected'));
+      }
+      
+      setTimeout(() => {
+        // Check if all seats exist and are available
+        const selectedSeats = seats.filter(seat => booking.seatIds.includes(seat.id));
+        
+        if (selectedSeats.length !== booking.seatIds.length) {
+          return reject(new Error('One or more selected seats do not exist'));
         }
-      });
-      
-      // Create booking
-      const newBooking = {
-        ...booking,
-        id: bookings.length + 1,
-        bookingDate: new Date().toISOString()
-      };
-      
-      bookings.push(newBooking);
-      resolve(newBooking);
-    }, 700);
+        
+        const unavailableSeats = selectedSeats.filter(seat => seat.status === 'booked');
+        
+        if (unavailableSeats.length > 0) {
+          return reject(new Error('Some selected seats are already booked'));
+        }
+        
+        // Update seat status atomically
+        selectedSeats.forEach(seat => {
+          const seatIndex = seats.findIndex(s => s.id === seat.id);
+          if (seatIndex !== -1) {
+            seats[seatIndex] = {
+              ...seats[seatIndex],
+              status: 'booked'
+            };
+          }
+        });
+        
+        // Create booking with sanitized data
+        const newBooking = {
+          ...booking,
+          id: bookings.length + 1,
+          customerName: booking.customerName.trim(),
+          email: booking.email.trim(),
+          bookingDate: new Date().toISOString()
+        };
+        
+        bookings.push(newBooking);
+        resolve({...newBooking}); // Return a copy to prevent mutation
+      }, 700);
+    } catch (error) {
+      reject(error instanceof Error ? error : new Error('Failed to create booking'));
+    }
   });
 };
