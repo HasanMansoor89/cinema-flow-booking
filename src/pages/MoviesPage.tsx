@@ -11,17 +11,20 @@ const MoviesPage = () => {
   const { data: movies, isLoading, error } = useQuery({
     queryKey: ['movies'],
     queryFn: getMovies,
-    onError: (err) => {
-      toast({
-        title: "Error loading movies",
-        description: err instanceof Error ? err.message : "Something went wrong",
-        variant: "destructive"
-      });
+    meta: {
+      errorHandler: (err: unknown) => {
+        toast({
+          title: "Error loading movies",
+          description: err instanceof Error ? err.message : "Something went wrong",
+          variant: "destructive"
+        });
+      }
     }
   });
 
-  // Handle error state explicitly
+  // Handle error with React Query's provided error state
   if (error) {
+    // Error toast is already shown via the meta.errorHandler
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="bg-card p-6 rounded-lg text-center">
