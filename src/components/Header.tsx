@@ -15,6 +15,7 @@ const Header: React.FC = () => {
         <div className="hidden md:flex items-center space-x-6">
           <Link to="/" className="text-white hover:text-cinema-primary transition-colors">Home</Link>
           <Link to="/movies" className="text-white hover:text-cinema-primary transition-colors">Movies</Link>
+          <Link to="/my-bookings" className="text-white hover:text-cinema-primary transition-colors">My Bookings</Link>
           <Link to="/about" className="text-white hover:text-cinema-primary transition-colors">About</Link>
         </div>
       </div>

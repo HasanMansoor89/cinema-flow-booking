@@ -11,6 +11,7 @@ import MovieDetailPage from "./pages/MovieDetailPage";
 import MoviesPage from "./pages/MoviesPage";
 import BookingPage from "./pages/BookingPage";
 import ConfirmationPage from "./pages/ConfirmationPage";
+import MyBookingsPage from "./pages/MyBookingsPage";
 import AboutPage from "./pages/AboutPage";
 import NotFound from "./pages/NotFound";
 import TermsOfService from "./pages/TermsOfService";
@@ -56,6 +57,7 @@ const App = () => {
                     <ConfirmationPage />
                   } 
                 />
+                <Route path="/my-bookings" element={<MyBookingsPage />} />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/privacy" element={<PrivacyPolicy />} />
