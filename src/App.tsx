@@ -16,7 +16,6 @@ import NotFound from "./pages/NotFound";
 import TermsOfService from "./pages/TermsOfService";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import FAQ from "./pages/FAQ";
-import { useEffect } from "react";
 
 // Create QueryClient with security configurations
 const queryClient = new QueryClient({
@@ -34,14 +33,8 @@ const queryClient = new QueryClient({
 });
 
 const App = () => {
-  // Set security headers programmatically
-  useEffect(() => {
-    // Prevent clickjacking
-    if (window.top !== window.self) {
-      document.body.innerHTML = 'This application cannot be displayed in a frame.';
-    }
-  }, []);
-
+  // Removed the anti-iframe check that was previously here
+  
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
