@@ -1,17 +1,21 @@
-
 import { Movie, Showtime, Seat, Booking } from '../types';
 
 // Replace this with your actual API URL when deployed
 const API_BASE_URL = 'http://localhost:3001/api'; // Change this to your API URL when deployed
 
+// Define the type for request options
+interface RequestOptions extends RequestInit {
+  headers?: Record<string, string>;
+}
+
 // Helper function for API requests
-const apiRequest = async (endpoint: string, options = {}) => {
+const apiRequest = async (endpoint: string, options: RequestOptions = {}) => {
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
-        ...options?.headers,
+        ...options.headers,
       },
     });
 
