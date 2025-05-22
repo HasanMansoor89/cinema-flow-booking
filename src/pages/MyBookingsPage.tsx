@@ -4,16 +4,21 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Film, Search } from 'lucide-react';
+import { findBooking } from '@/services/api';
+import { Booking } from '@/types';
 
 const MyBookingsPage = () => {
   const { toast } = useToast();
   const [bookingId, setBookingId] = useState('');
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [booking, setBooking] = useState<any>(null);
+  const [booking, setBooking] = useState<Booking | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
+    
     if (!bookingId || !email) {
       toast({
         title: "Missing information",
@@ -24,31 +29,29 @@ const MyBookingsPage = () => {
     }
 
     setIsLoading(true);
-    // This would normally be a real API call
-    setTimeout(() => {
-      // Mock booking data - in a real app, this would come from an API
-      if (bookingId === '1' && email === 'hasan@gmail.com') {
-        setBooking({
-          id: '1',
-          movie: 'Inception',
-          date: '2023-05-10',
-          time: '19:00',
-          seats: ['A1', 'A2'],
-          totalPrice: 25.98,
-          customerName: 'Hasan',
-          email: 'hasan@gmail.com',
-          bookingDate: new Date().toISOString()
-        });
-      } else {
+    try {
+      const foundBooking = await findBooking(bookingId, email);
+      setBooking(foundBooking || null);
+      
+      if (!foundBooking) {
         toast({
           title: "Booking not found",
           description: "We couldn't find a booking with these details",
           variant: "destructive"
         });
-        setBooking(null);
       }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      setError(errorMessage);
+      toast({
+        title: "Error finding booking",
+        description: errorMessage,
+        variant: "destructive"
+      });
+      setBooking(null);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -105,6 +108,12 @@ const MyBookingsPage = () => {
         </form>
       </div>
 
+      {error && (
+        <div className="max-w-2xl mx-auto bg-red-900/20 border border-red-700 p-4 rounded-lg mb-8">
+          <p className="text-red-300">{error}</p>
+        </div>
+      )}
+
       {booking && (
         <div className="bg-card rounded-lg p-6 max-w-2xl mx-auto border border-white/10">
           <h2 className="text-xl font-semibold mb-4">Booking Details</h2>
@@ -116,21 +125,6 @@ const MyBookingsPage = () => {
             </div>
             
             <div className="flex justify-between border-b border-white/10 pb-2">
-              <span className="text-gray-400">Movie</span>
-              <span>{booking.movie}</span>
-            </div>
-            
-            <div className="flex justify-between border-b border-white/10 pb-2">
-              <span className="text-gray-400">Date & Time</span>
-              <span>{booking.date} at {booking.time}</span>
-            </div>
-            
-            <div className="flex justify-between border-b border-white/10 pb-2">
-              <span className="text-gray-400">Seats</span>
-              <span>{booking.seats.join(', ')}</span>
-            </div>
-            
-            <div className="flex justify-between border-b border-white/10 pb-2">
               <span className="text-gray-400">Customer</span>
               <span>{booking.customerName}</span>
             </div>
@@ -138,6 +132,21 @@ const MyBookingsPage = () => {
             <div className="flex justify-between border-b border-white/10 pb-2">
               <span className="text-gray-400">Email</span>
               <span>{booking.email}</span>
+            </div>
+            
+            <div className="flex justify-between border-b border-white/10 pb-2">
+              <span className="text-gray-400">Showtime ID</span>
+              <span>{booking.showtimeId}</span>
+            </div>
+            
+            <div className="flex justify-between border-b border-white/10 pb-2">
+              <span className="text-gray-400">Seats</span>
+              <span>{booking.seatIds.join(', ')}</span>
+            </div>
+            
+            <div className="flex justify-between border-b border-white/10 pb-2">
+              <span className="text-gray-400">Booking Date</span>
+              <span>{booking.bookingDate && new Date(booking.bookingDate).toLocaleString()}</span>
             </div>
             
             <div className="flex justify-between">
