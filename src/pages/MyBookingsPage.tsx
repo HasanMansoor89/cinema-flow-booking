@@ -3,13 +3,25 @@ import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Film, Search } from 'lucide-react';
+import { Film, Search, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const MyBookingsPage = () => {
   const { toast } = useToast();
   const [bookingId, setBookingId] = useState('');
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [booking, setBooking] = useState<any>(null);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -48,6 +60,21 @@ const MyBookingsPage = () => {
         setBooking(null);
       }
       setIsLoading(false);
+    }, 1000);
+  };
+
+  const handleDeleteBooking = () => {
+    setIsDeleting(true);
+    // This would normally be a real API call to delete the booking
+    setTimeout(() => {
+      toast({
+        title: "Booking cancelled",
+        description: "Your booking has been successfully cancelled",
+      });
+      setBooking(null);
+      setBookingId('');
+      setEmail('');
+      setIsDeleting(false);
     }, 1000);
   };
 
@@ -107,7 +134,39 @@ const MyBookingsPage = () => {
 
       {booking && (
         <div className="bg-card rounded-lg p-6 max-w-2xl mx-auto border border-white/10">
-          <h2 className="text-xl font-semibold mb-4">Booking Details</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Booking Details</h2>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  disabled={isDeleting}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Cancel Booking
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Cancel Booking</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to cancel this booking? This action cannot be undone and you may be subject to cancellation fees.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Keep Booking</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={handleDeleteBooking}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? "Cancelling..." : "Cancel Booking"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
           
           <div className="space-y-4">
             <div className="flex justify-between border-b border-white/10 pb-2">
