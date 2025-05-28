@@ -131,6 +131,10 @@ const showtimes = generateShowtimes();
 const seats = generateSeats(showtimes);
 const bookings: Booking[] = [];
 
+// Booking ID management
+let nextBookingId = 1;
+const deletedBookingIds: number[] = [];
+
 // Security related helpers
 const sanitizeId = (id: unknown): number => {
   const parsedId = typeof id === 'string' ? parseInt(id, 10) : Number(id);
@@ -284,20 +288,73 @@ export const createBooking = async (booking: Booking): Promise<Booking> => {
           }
         });
         
+        // Get next available booking ID
+        let bookingId: number;
+        if (deletedBookingIds.length > 0) {
+          // Reuse the smallest deleted ID
+          deletedBookingIds.sort((a, b) => a - b);
+          bookingId = deletedBookingIds.shift()!;
+        } else {
+          bookingId = nextBookingId++;
+        }
+        
         // Create booking with sanitized data
         const newBooking = {
           ...booking,
-          id: bookings.length + 1,
+          id: bookingId,
           customerName: booking.customerName.trim(),
           email: booking.email.trim(),
           bookingDate: new Date().toISOString()
         };
         
         bookings.push(newBooking);
+        console.log('Created booking with ID:', bookingId);
         resolve({...newBooking}); // Return a copy to prevent mutation
       }, 700);
     } catch (error) {
       reject(error instanceof Error ? error : new Error('Failed to create booking'));
+    }
+  });
+};
+
+export const deleteBooking = async (bookingId: number): Promise<boolean> => {
+  return new Promise((resolve, reject) => {
+    try {
+      const id = sanitizeId(bookingId);
+      
+      setTimeout(() => {
+        const bookingIndex = bookings.findIndex(b => b.id === id);
+        
+        if (bookingIndex === -1) {
+          return reject(new Error('Booking not found'));
+        }
+        
+        const booking = bookings[bookingIndex];
+        
+        // Free up the booked seats
+        if (booking.seatIds) {
+          booking.seatIds.forEach(seatId => {
+            const seatIndex = seats.findIndex(seat => seat.id === seatId);
+            if (seatIndex !== -1) {
+              seats[seatIndex] = {
+                ...seats[seatIndex],
+                status: 'available'
+              };
+            }
+          });
+        }
+        
+        // Remove booking from array
+        bookings.splice(bookingIndex, 1);
+        
+        // Add the booking ID back to the pool for reuse
+        deletedBookingIds.push(id);
+        console.log('Deleted booking with ID:', id, '- ID added back to pool');
+        
+        resolve(true);
+      }, 500);
+    } catch (error) {
+      reject(error instanceof Error ? error : new Error('Failed to delete booking'));
     }
   });
 };
