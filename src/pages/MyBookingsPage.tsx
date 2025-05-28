@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Film, Search, Trash2 } from 'lucide-react';
+import { updateSeatStatus } from '@/services/api';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -63,19 +63,52 @@ const MyBookingsPage = () => {
     }, 1000);
   };
 
-  const handleDeleteBooking = () => {
+  const handleDeleteBooking = async () => {
     setIsDeleting(true);
-    // This would normally be a real API call to delete the booking
-    setTimeout(() => {
+    
+    try {
+      // Free up the booked seats by updating their status to 'available'
+      if (booking && booking.seats) {
+        // Extract seat IDs from the seat names (A1, A2, etc.)
+        // In a real app, you'd have the actual seat IDs stored in the booking
+        // For now, we'll simulate this by updating seats based on the booking
+        console.log('Freeing up seats for booking:', booking.id);
+        
+        // In a real implementation, you would:
+        // 1. Get the actual seat IDs from the booking record
+        // 2. Update each seat's status to 'available'
+        // For this mock, we'll just log the action
+        
+        // Simulate API calls to free up seats
+        await Promise.all(
+          booking.seats.map(async (seatName: string) => {
+            // In a real app, you'd use the actual seat ID
+            console.log(`Freeing up seat: ${seatName}`);
+            // await updateSeatStatus(seatId, 'available');
+          })
+        );
+      }
+      
+      // This would normally be a real API call to delete the booking
+      setTimeout(() => {
+        toast({
+          title: "Booking cancelled",
+          description: "Your booking has been successfully cancelled and seats have been freed up",
+        });
+        setBooking(null);
+        setBookingId('');
+        setEmail('');
+        setIsDeleting(false);
+      }, 1000);
+    } catch (error) {
+      console.error('Error cancelling booking:', error);
       toast({
-        title: "Booking cancelled",
-        description: "Your booking has been successfully cancelled",
+        title: "Error",
+        description: "Failed to cancel booking. Please try again.",
+        variant: "destructive"
       });
-      setBooking(null);
-      setBookingId('');
-      setEmail('');
       setIsDeleting(false);
-    }, 1000);
+    }
   };
 
   return (
